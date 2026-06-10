@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control — Auditoría Windows</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --terminal-bg: #030712;
+            --terminal-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            backdrop-filter: blur(12px);
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #0ea5e9, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .server-badge {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Dashboard Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Buttons & Actions */
+        .actions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Form styling */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Terminal Window */
+        .terminal-card {
+            grid-column: 1 / -1;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            border: 1px solid var(--terminal-border);
+            border-bottom: none;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .terminal-body {
+            background: var(--terminal-bg);
+            border: 1px solid var(--terminal-border);
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            padding: 20px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #10b981;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Reports List */
+        .report-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .report-item span {
+            font-weight: 500;
+        }
+
+        .report-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .report-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-msg {
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 500;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <h1>Sistema de Auditoría & Parches Windows</h1>
+            <p>Consola de Administración y Automatización DevSecOps</p>
+        </div>
+        <div id="hostname-badge" class="server-badge">Detectando servidor...</div>
+    </header>
+
+    <!-- Content Grid -->
+    <div class="grid">
+        <!-- Panel de Acciones -->
+        <div class="card">
+            <h2 class="card-title">Acciones del Sistema</h2>
+            <div class="actions-container">
+                <button id="btn-audit" class="btn btn-primary" onclick="runScript('run-audit')">
+                    Ejecutar Auditoría
+                </button>
+                <button id="btn-setup" class="btn btn-success" onclick="runScript('run-setup')">
+                    Instalar / Reconfigurar
+                </button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+                * La auditoría buscará parches pendientes y logs críticos de las últimas 24h, generando el reporte y enviando las alertas. El instalador configurará la tarea programada.
+            </p>
+
+            <h2 class="card-title">Reportes HTML Generados</h2>
+            <ul id="reports-container" class="report-list">
+                <li style="color: var(--text-muted); text-align: center; padding: 20px; font-style: italic;">Cargando reportes...</li>
+            </ul>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 15px; background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); color: var(--primary);" onclick="openReportsFolder()">
+                Abrir Carpeta en Explorador
+            </button>
+        </div>
+
+        <!-- Panel de Configuración -->
+        <div class="card">
+            <h2 class="card-title">Configuración del Servidor</h2>
+            <form id="config-form" onsubmit="saveConfig(event)">
+                <div class="form-group">
+                    <label for="webhookUrl">Webhook URL (Discord / Slack)</label>
+                    <input type="text" id="webhookUrl" class="form-control" placeholder="https://discord.com/api/webhooks/...">
+                </div>
+                <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0;">
+                    <div class="form-group">
+                        <label for="umbralParches">Umbral de Parches Críticos</label>
+                        <input type="number" id="umbralParches" class="form-control" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="horasAtras">Horas a analizar (Logs)</label>
+                        <input type="number" id="horasAtras" class="form-control" min="1" max="72">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                    Guardar Configuración
+                </button>
+                <div id="config-status" class="status-msg"></div>
+            </form>
+        </div>
+
+        <!-- Terminal de Comandos -->
+        <div class="card terminal-card">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="dot dot-red"></div>
+                    <div class="dot dot-yellow"></div>
+                    <div class="dot dot-green"></div>
+                </div>
+                <div style="font-size: 12px; font-family: monospace; color: var(--text-muted);">Consola de Ejecución en Tiempo Real</div>
+                <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; border-radius: 4px;" onclick="clearTerminal()">Limpiar</button>
+            </div>
+            <div id="terminal" class="terminal-body">Presiona un botón para ejecutar los procesos y ver los logs aquí en tiempo real...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '';
+
+    // Cargar datos al iniciar
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchStatus();
+        fetchReports();
+    });
+
+    function clearTerminal() {
+        document.getElementById('terminal').innerHTML = '';
+    }
+
+    function writeTerminal(text, type = 'info') {
+        const term = document.getElementById('terminal');
+        const color = type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#10b981');
+        term.innerHTML += `<span style="color: ${color};">${text}</span>\n`;
+        term.scrollTop = term.scrollHeight;
+    }
+
+    // Obtener Estado y Configuración
+    function fetchStatus() {
+        fetch('/api/status')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('hostname-badge').innerText = `Servidor: ${data.hostname}`;
+                document.getElementById('webhookUrl').value = data.config.webhookUrl;
+                document.getElementById('umbralParches').value = data.config.umbralParchesCriticos;
+                document.getElementById('horasAtras').value = data.config.horasAtras;
+            })
+            .catch(err => {
+                writeTerminal(`Error al conectar con la API de configuración: ${err}`, 'error');
+            });
+    }
+
+    // Obtener Reportes
+    function fetchReports() {
+        fetch('/api/reports')
+            .then(res => res.json())
+            .then(reports => {
+                const container = document.getElementById('reports-container');
+                container.innerHTML = '';
+                if (reports.length === 0) {
+                    container.innerHTML = `<li style="color: var(--text-muted); text-align: center; padding: 20px; font-style: italic;">No se han generado reportes aún.</li>`;
+                    return;
+                }
+                reports.forEach(report => {
+                    const li = document.createElement('li');
+                    li.className = 'report-item';
+                    li.innerHTML = `
+                        <span>${report.name}</span>
+                        <a class="report-link" onclick="openReport('${report.name}')">Visualizar Reporte</a>
+                    `;
+                    container.appendChild(li);
+                });
+            })
+            .catch(err => {
+                console.error("Error al cargar reportes", err);
+            });
+    }
+
+    // Abrir Reporte
+    function openReport(filename) {
+        window.open(`/api/view-report?file=${encodeURIComponent(filename)}`, '_blank');
+    }
+
+    // Abrir Carpeta de Reportes en Windows Explorer
+    function openReportsFolder() {
+        writeTerminal(`[${new Date().toLocaleTimeString()}] Solicitando apertura de la carpeta de reportes en el Explorador...`);
+        fetch('/api/open-reports-folder', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                writeTerminal("Carpeta de reportes abierta exitosamente.", 'success');
+            } else {
+                writeTerminal(`Error al abrir la carpeta: ${data.message}`, 'error');
+            }
+        })
+        .catch(err => {
+            writeTerminal(`Fallo de conexion: ${err}`, 'error');
+        });
+    }
+
+    // Guardar Configuración
+    function saveConfig(e) {
+        e.preventDefault();
+        const statusDiv = document.getElementById('config-status');
+        statusDiv.style.color = 'var(--text-muted)';
+        statusDiv.innerText = 'Guardando...';
+
+        const payload = {
+            webhookUrl: document.getElementById('webhookUrl').value,
+            umbralParchesCriticos: parseInt(document.getElementById('umbralParches').value),
+            horasAtras: parseInt(document.getElementById('horasAtras').value)
+        };
+
+        fetch('/api/save-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                statusDiv.style.color = 'var(--success)';
+                statusDiv.innerText = '¡Configuración guardada exitosamente!';
+                writeTerminal("Configuración guardada de vuelta a config.json.", 'success');
+                fetchStatus(); // recargar
+            } else {
+                statusDiv.style.color = 'var(--danger)';
+                statusDiv.innerText = `Error: ${data.message}`;
+            }
+        })
+        .catch(err => {
+            statusDiv.style.color = 'var(--danger)';
+            statusDiv.innerText = `Fallo en la comunicación: ${err}`;
+        });
+    }
+
+    // Ejecutar Script
+    function runScript(endpoint) {
+        const btnAudit = document.getElementById('btn-audit');
+        const btnSetup = document.getElementById('btn-setup');
+        
+        // Bloquear botones durante ejecución
+        btnAudit.disabled = true;
+        btnSetup.disabled = true;
+
+        clearTerminal();
+        writeTerminal(`[${new Date().toLocaleTimeString()}] Iniciando llamada a PowerShell: ${endpoint}...`);
+        writeTerminal(`Por favor espera, ejecutando cmdlets en el servidor local...\n`);
+
+        fetch(`/api/${endpoint}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            writeTerminal(data.output);
+            if (data.status === 'ok') {
+                writeTerminal(`\n[${new Date().toLocaleTimeString()}] ¡Proceso completado con éxito!`, 'success');
+            } else {
+                writeTerminal(`\n[${new Date().toLocaleTimeString()}] Proceso finalizado con errores.`, 'error');
+            }
+            btnAudit.disabled = false;
+            btnSetup.disabled = false;
+            fetchReports(); // Actualizar lista de reportes en caso de que se haya generado uno
+        })
+        .catch(err => {
+            writeTerminal(`\nFallo de conexión al ejecutar el script: ${err}`, 'error');
+            btnAudit.disabled = false;
+            btnSetup.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>

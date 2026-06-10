@@ -1,0 +1,10 @@
+# Excluir reportes generados dinámicamente
+reportes/*
+!reportes/.gitkeep
+
+# Excluir logs de ejecución
+logs/*
+!logs/.gitkeep
+
+# Excluir configuración local sensible (webhook)
+config/config.json

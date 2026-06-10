@@ -1,0 +1,7 @@
+﻿{
+  "webhookUrl": "https://discord.com/api/webhooks/TU_WEBHOOK_AQUI",
+  "umbralParchesCriticos": 5,
+  "horasAtras": 24,
+  "rutaReportes": "C:\\proyecto-auditoria-windows\\reportes",
+  "rutaLogs": "C:\\proyecto-auditoria-windows\\logs"
+}
