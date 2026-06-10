@@ -6,6 +6,47 @@ El proyecto realiza de forma periódica la detección de parches de seguridad cr
 
 ---
 
+## Tabla de Contenidos
+
+- [ Consideraciones Críticas de Operación](#consideraciones)
+- [ Requisitos Previos](#requisitos)
+- [ Instalación en un Solo Comando](#instalacion)
+- [ Configuración del Webhook de Notificaciones](#configuracion)
+- [ Estructura del Proyecto](#estructura)
+- [ Interfaz Gráfica de Usuario (GUI)](#gui)
+- [ Ejecución Manual y Pruebas](#ejecucion)
+- [ Solución de Problemas (Troubleshooting)](#solucion)
+
+---
+
+<a id="consideraciones"></a>
+
+## Consideraciones Críticas de Operación
+
+Para garantizar el funcionamiento autónomo y seguro del sistema, debes cumplir estrictamente estos tres requisitos:
+
+> Importante
+> **1. Elevación de Privilegios (Modo Administrador)**
+> Tanto el instalador (`Instalar.bat` / [setup.ps1](file:///C:/Users/Operaciones/Downloads/setup.ps1)) como cualquier ejecución manual de [main.ps1](file:///C:/Users/Operaciones/Downloads/scripts/main.ps1) deben realizarse con privilegios de **Administrador**.
+>
+> *El sistema requiere acceso a los registros de eventos de Windows y al Programador de Tareas, procesos que el sistema operativo bloqueará si no tienes permisos elevados.*
+
+> Peligro
+> **2. Persistencia de la Interfaz GUI**
+> La consola [run_gui.ps1](file:///C:/Users/Operaciones/Downloads/run_gui.ps1) actúa como un servidor web local. Si cierras la ventana de PowerShell donde se ejecuta, el servicio de visualización y el panel administrativo dejarán de estar disponibles en `http://localhost:8080`.
+>
+> *Nota: Esto no afecta a la auditoría programada (que corre sola en segundo plano), pero sí a tu capacidad de ver reportes o cambiar la configuración en tiempo real.*
+
+> Precaucion
+> **3. Configuración de Webhooks (Canal de Alertas)**
+> El sistema no incluye un canal de comunicación público. Debes generar tu propio Webhook en tu canal privado de Discord o Slack y configurarlo en el panel (o en [config.json](file:///C:/Users/Operaciones/Downloads/config/config.json)).
+>
+> *Sin esto, el sistema se auditará a sí mismo, pero no tendrás forma de recibir las alertas de vulnerabilidad o error.*
+
+---
+
+<a id="requisitos"></a>
+
 ## Requisitos Previos
 
 - **Sistema Operativo:** Windows 10, Windows 11 o Windows Server 2016+.
@@ -14,6 +55,8 @@ El proyecto realiza de forma periódica la detección de parches de seguridad cr
 - **Acceso a Internet:** Necesario para descargar el módulo `PSWindowsUpdate` (si no está instalado) y para enviar las notificaciones webhook.
 
 ---
+
+<a id="instalacion"></a>
 
 ## Instalación en un Solo Comando
 
@@ -26,7 +69,7 @@ Para instalar, configurar las carpetas, instalar dependencias y programar el sis
 > [!WARNING]
 > **Importación Manual del XML (`tasks/AuditoriaWindows.xml`):**
 > El archivo XML está configurado por defecto con una ruta de plantilla genérica (`C:\Ruta\De\Instalacion\scripts\main.ps1`) y configurado para ejecutarse bajo la cuenta del sistema local (`SYSTEM` / `S-1-5-18`).
-> 
+>
 > * **Si importas el XML manualmente** en tu Programador de Tareas, deberás editar previamente el archivo para reemplazar `C:\Ruta\De\Instalacion\scripts\main.ps1` por la ruta absoluta real donde descargaste el proyecto en tu máquina.
 > * **Solución Recomendada:** Ejecuta siempre el instalador `.\setup.ps1` desde PowerShell como Administrador. Este script registra la tarea dinámicamente con tu ruta local real y genera/sobreescribe el XML sanitizándolo de forma automática antes de guardarlo.
 
@@ -41,6 +84,8 @@ Para instalar, configurar las carpetas, instalar dependencias y programar el sis
 7. Registra y exporta una **Tarea Programada** nativa de Windows que ejecutará la auditoría todos los días a las **08:00 AM** con máximos privilegios, incluso si no hay una sesión de usuario activa.
 
 ---
+
+<a id="configuracion"></a>
 
 ## Configuración del Webhook de Notificaciones
 
@@ -59,6 +104,8 @@ Por seguridad, los datos sensibles no se suben a Git. La configuración del Webh
 Reemplaza `"https://discord.com/api/webhooks/TU_WEBHOOK_AQUI"` por tu webhook de canal real de Discord o Slack para recibir las alertas en tiempo real.
 
 ---
+
+<a id="estructura"></a>
 
 ## Estructura del Proyecto
 
@@ -109,14 +156,14 @@ graph TD
     Main -->|2. Inicia Transcripción| Log
     Main -->|3. Invoca| M1
     Main -->|4. Invoca| M2
-    
+  
     M1 -->|Retorna lista de parches| Main
     M2 -->|Retorna logs de error| Main
-    
+  
     Main -->|5. Pasa datos a| M3
     M3 -->|Genera archivo físico| Report
     M3 -->|Retorna ruta del HTML| Main
-    
+  
     Main -->|6. Envía estado OK y datos a| M4
     M4 -->|Publica Embed a| Discord
 
@@ -127,6 +174,8 @@ graph TD
 ```
 
 ---
+
+<a id="gui"></a>
 
 ## Interfaz Gráfica de Usuario (GUI)
 
@@ -146,6 +195,8 @@ Para iniciar la interfaz gráfica:
 
 ---
 
+<a id="ejecucion"></a>
+
 ## Ejecución Manual y Pruebas
 
 Si deseas auditar el servidor manualmente por consola en cualquier momento, ejecuta:
@@ -163,9 +214,12 @@ Si deseas auditar el servidor manualmente por consola en cualquier momento, ejec
 
 ---
 
+<a id="solucion"></a>
+
 ## Solución de Problemas (Troubleshooting)
 
 ### 1. Error en la Auditoría de Parches (Servicio `wuauserv` detenido o deshabilitado)
+
 * **Síntoma:** El reporte, la terminal de la GUI o el archivo de log muestra errores al buscar actualizaciones, y reporta que el servicio `wuauserv` (Windows Update) no está activo o está deshabilitado.
 * **Causa:** El servicio de actualizaciones de Windows fue deshabilitado por directivas de grupo locales/dominio o por utilidades de optimización del sistema.
 * **Solución:**
@@ -179,6 +233,7 @@ Si deseas auditar el servidor manualmente por consola en cualquier momento, ejec
   4. Si tu máquina pertenece a un dominio con WSUS/GPO restrictivas, solicita al administrador del sistema habilitar el servicio Windows Update en la directiva.
 
 ### 2. Error al Instalar o Cargar el Módulo `PSWindowsUpdate`
+
 * **Síntoma:** El script finaliza indicando que no puede importar `PSWindowsUpdate`.
 * **Causa:** La política de ejecución no permite módulos de terceros o la descarga desde la PowerShell Gallery está bloqueada.
 * **Solución:**
@@ -192,6 +247,7 @@ Si deseas auditar el servidor manualmente por consola en cualquier momento, ejec
      ```
 
 ### 3. Las Alertas por Webhook no llegan a Discord
+
 * **Síntoma:** La ejecución finaliza con éxito localmente, pero no se recibe ninguna alerta en los canales de comunicación.
 * **Causa:** URL de webhook incorrecta o falta de conectividad HTTP saliente hacia la API externa.
 * **Solución:**
